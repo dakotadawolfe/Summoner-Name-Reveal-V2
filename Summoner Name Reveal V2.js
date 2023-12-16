@@ -313,7 +313,7 @@ const rankedRoles = roles.map((roleString, index) => {
 
 
 		const mostCommonRolesArray = rankedRoles.map(rolesString => mostCommonRole(rolesString));
-		const winRates = rankedWins.map(winString => calculateWinRate(winString));
+		const winRates = wins.map(winString => calculateWinRate(winString));
 		const kdaRatios = calculateKDA(kills, assists, deaths);
 			
 
