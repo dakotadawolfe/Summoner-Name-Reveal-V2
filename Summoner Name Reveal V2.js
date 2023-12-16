@@ -300,7 +300,7 @@ const rankedWins = wins.map((winString, index) => {
         .join(',');
 });
 
-const rankedRoles = roles.map((roleString, index) => {
+const roles = roles.map((roleString, index) => {
     if (!roleString) return ""; 
 
     const roleArray = roleString.split(',');
@@ -312,14 +312,14 @@ const rankedRoles = roles.map((roleString, index) => {
 });
 
 
-		const mostCommonRolesArray = rankedRoles.map(rolesString => mostCommonRole(rolesString));
+		const mostCommonRolesArray = roles.map(rolesString => mostCommonRole(rolesString));
 		const winRates = rankedWins.map(winString => calculateWinRate(winString));
 		const kdaRatios = calculateKDA(kills, assists, deaths);
 			
 
 		
 		
-		const finalArray = names.map((name, index) => `${namesonly[index]} - ${ranks[index]} - ${winRates[index]} - ${mostCommonRolesArray[index]} - ${kdaRatios[index]}`);
+		const finalArray = names.map((name, index) => `${namesonly[index]} - ${ranks[index]} - ${wins[index]} - ${mostCommonRolesArray[index]} - ${kdaRatios[index]}`);
 		
 		console.log(matchData);
 		
