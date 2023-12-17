@@ -8,7 +8,7 @@ import { create } from './api.js';
  * @param {number} endIndex - Ending index for match history query.
  * @returns {Object|boolean} - Match data object or false if not found.
  */
-async function queryMatch(puuid, begIndex = 0, endIndex = 5) {
+async function queryMatch(puuid, begIndex = 0, endIndex = 19) {
     try {
         const endpoint = `/lol-match-history/v1/products/lol/${puuid}/matches?begIndex=${begIndex}&endIndex=${endIndex}`;
         const result = await create('GET', endpoint);
