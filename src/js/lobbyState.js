@@ -66,7 +66,7 @@ function calculateWinRate(winList) {
     const winCount = winList.filter(result => result === "true").length;
     const totalGames = winList.length;
     const winRate = (winCount / totalGames) * 100;
-    return `${winRate.toFixed(2)}%`;
+    return `${Math.round(winRate)}%`;
 }
 
 // Determines the most common role from match data
