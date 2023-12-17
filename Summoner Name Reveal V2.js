@@ -311,7 +311,6 @@ async function updateLobbyState(message) {
 		const puuids = lobby.map(player => `${player.puuid}`);
 		const matchData = await getMatchDataForPuuids(puuids);
 		const urlnames = names.map(name => encodeURIComponent(name.replace(/%20/g, '+') )).join('%2C');
-		//const urlnames = names.map(name => name.replace(/ #/g, '%23').replace(/ /g, '%20').replace(/​∞​​/g, '%E2%80%8B%E2%88%9E%E2%80%8B%E2%80%8B')).join(',');
 		const ranks = await getRankedStatsForPuuids(puuids);
 		const matchType = matchData.map(history => `${history.gameMode}`);
 		const wins = matchData.map(history => `${history.winList}`);
