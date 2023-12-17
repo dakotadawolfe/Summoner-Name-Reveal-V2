@@ -120,47 +120,77 @@ async function fetchRankedStats(puuid) {
 }
 
 async function getRankedStatsForPuuids(puuidArray) {
-	
-	function romanToNumber(roman) {
-    const romanNumerals = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
-    let number = 0;
-    let prevValue = 0;
+    function romanToNumber(roman) {
+        const romanNumerals = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+        let number = 0;
+        let prevValue = 0;
 
-    for (let i = roman.length - 1; i >= 0; i--) {
-        const currentValue = romanNumerals[roman[i]];
+        for (let i = roman.length - 1; i >= 0; i--) {
+            const currentValue = romanNumerals[roman[i]];
 
-        if (currentValue < prevValue) {
-            number -= currentValue;
-        } else {
-            number += currentValue;
+            if (currentValue < prevValue) {
+                number -= currentValue;
+            } else {
+                number += currentValue;
+            }
+
+            prevValue = currentValue;
         }
 
-        prevValue = currentValue;
+        return number;
     }
 
-    return number;
-}
     try {
         const promises = puuidArray.map(puuid => fetchRankedStats(puuid));
         const rankedStatsArray = await Promise.all(promises);
+        console.log(rankedStatsArray);
 
         const simplifiedStats = rankedStatsArray.map(stats => {
-
             if (stats && stats.queueMap && stats.queueMap["RANKED_SOLO_5x5"]) {
                 const soloQueueStats = stats.queueMap["RANKED_SOLO_5x5"];
-                if (soloQueueStats.tier && soloQueueStats.tier !== "NA" && soloQueueStats.division) {
+				const fiveQueueStats = stats.queueMap["RANKED_FLEX_SR"];
+
+              
+				if (soloQueueStats.tier != "IRON" && soloQueueStats.tier != "BRONZE" && soloQueueStats.tier != "SILVER" && soloQueueStats.tier != "GOLD" && soloQueueStats.tier != "PLATINUM" && soloQueueStats.tier != "EMERALD" && soloQueueStats.tier != "DIAMOND" && soloQueueStats.tier != "NA" && soloQueueStats.tier != ""){
+					return `${soloQueueStats.tier[0]}`;
+				}
+        
+
+        if (soloQueueStats.isProvisional || soloQueueStats.tier == "NA" || !soloQueueStats.tier || !soloQueueStats.division) {
+					
+					if(fiveQueueStats.isProvisional || fiveQueueStats.tier == "NA" || !fiveQueueStats.tier || !fiveQueueStats.division){
+						return "Unranked";
+					}
+
+						
+						if (fiveQueueStats.tier != "IRON" && fiveQueueStats.tier != "BRONZE" && fiveQueueStats.tier != "SILVER" && fiveQueueStats.tier != "GOLD" && fiveQueueStats.tier != "PLATINUM" && fiveQueueStats.tier != "EMERALD" && fiveQueueStats.tier != "DIAMOND" && fiveQueueStats.tier != "NA" && fiveQueueStats.tier != "" ){
+					return `${fiveQueueStats.tier[0]}`;
+				}
+				else{
+					return `${fiveQueueStats.tier[0]}${romanToNumber(fiveQueueStats.division)}`;
+				}
+
+						
+
+                   
+                } 
+				
+				
+				
+				else {
                     return `${soloQueueStats.tier[0]}${romanToNumber(soloQueueStats.division)}`;
                 }
             }
-            return "Unranked"; 
+            return "Unranked";
         });
 
         return simplifiedStats;
     } catch (error) {
         console.error('Error:', error);
-        return []; 
+        return [];
     }
 }
+
 
 async function getChampionSelectChatInfo() {
     const teamChatInfo = await create('GET', '/lol-chat/v1/conversations');
@@ -274,12 +304,14 @@ async function updateLobbyState(message) {
 		const isRankedGame = gametitle.gameData.queue.isRanked;
 		const chatInfo = await getChampionSelectChatInfo();
 		const chat = await create('GET', `/lol-chat/v1/conversations/${chatInfo.id}/messages`);
-		const lobby = await create("GET", "//riotclient/chat/v5/participants/champ-select");
-		const names = lobby.participants.map(player => `${player.game_name} #${player.game_tag}`);
-		const namesonly = lobby.participants.map(player => `${player.game_name}`);
-		const puuids = lobby.participants.map(player => `${player.puuid}`);
+		const participants = await create("GET", "//riotclient/chat/v5/participants");
+		const lobby = participants.participants.filter(participant => participant.cid.includes('champ-select'));
+		const names = lobby.map(player => `${player.game_name} #${player.game_tag}`);
+		const namesonly = lobby.map(player => `${player.game_name}`);
+		const puuids = lobby.map(player => `${player.puuid}`);
 		const matchData = await getMatchDataForPuuids(puuids);
-		const urlnames = names.map(name => name.replace(/ #/g, '%23').replace(/ /g, '%20').replace(/​∞​​/g, '%E2%80%8B%E2%88%9E%E2%80%8B%E2%80%8B')).join(',');
+		const urlnames = names.map(name => encodeURIComponent(name.replace(/%20/g, '+') )).join('%2C');
+		//const urlnames = names.map(name => name.replace(/ #/g, '%23').replace(/ /g, '%20').replace(/​∞​​/g, '%E2%80%8B%E2%88%9E%E2%80%8B%E2%80%8B')).join(',');
 		const ranks = await getRankedStatsForPuuids(puuids);
 		const matchType = matchData.map(history => `${history.gameMode}`);
 		const wins = matchData.map(history => `${history.winList}`);
@@ -300,19 +332,9 @@ const rankedWins = wins.map((winString, index) => {
         .join(',');
 });
 
-const rankedRoles = roles.map((roleString, index) => {
-    if (!roleString) return ""; 
-
-    const roleArray = roleString.split(',');
-    const matchTypeArray = matchType[index].split(',');
-    
-    return roleArray
-        .filter((_, roleIndex) => matchTypeArray[roleIndex] === "420")
-        .join(',');
-});
 
 
-		const mostCommonRolesArray = rankedRoles.map(rolesString => mostCommonRole(rolesString));
+		const mostCommonRolesArray = roles.map(rolesString => mostCommonRole(rolesString));
 		const winRates = wins.map(winString => calculateWinRate(winString));
 		const kdaRatios = calculateKDA(kills, assists, deaths);
 			
@@ -328,9 +350,9 @@ const rankedRoles = roles.map((roleString, index) => {
                 const message = `${summname}`;
                 await postMessageToChat(chatInfo.id, message);
             }
-			const message2 = `https://porofessor.gg/pregame/${region}/${urlnames}`;
-			const encoded = encodeURI(message2);
-			await postMessageToChat(chatInfo.id, encoded);
+			const message2 = `https://www.op.gg/multisearch/${region}?summoners=${urlnames}`;
+			
+			await postMessageToChat(chatInfo.id, message2);
         }
 		
 			
