@@ -6,7 +6,7 @@ Features:
 
 -See quick stats like Rank, Win Rate, Commonly Played Lane, and KDA over the past 20 ranked games.
 
--Open a link directly to porofesser.gg to see extended stats.
+-Open a link directly to op.gg to see extended stats.
 
 
 FYI:
