@@ -13,8 +13,6 @@ FYI:
 
 -It will show N/A or say Unranked if there is not enough recent data to pull from, please refer to the link in chat to see more detailed information about a champ.
 
--The names may be a little wonky outside of ranked mode, this is mainly intended for ranked use as you can use other external programs to see stats in normal modes.
-
 Bugs:
 
 -IDK comment here!
