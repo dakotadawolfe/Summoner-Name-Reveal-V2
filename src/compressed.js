@@ -196,6 +196,8 @@ async function getRankedStatsForPuuids(puuidArray) {
 async function getChampionSelectChatInfo() {
     const teamChatInfo = await create('GET', '/lol-chat/v1/conversations');
 	console.log(teamChatInfo);
+	console.log(Array.isArray(teamChatInfo), teamChatInfo);
+	console.log(teamChatInfo[0].type === 'championSelect');
     return teamChatInfo ? teamChatInfo.find(item => item.type == 'championSelect') : null;
 }
   
