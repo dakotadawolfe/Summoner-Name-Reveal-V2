@@ -196,7 +196,7 @@ async function getRankedStatsForPuuids(puuidArray) {
 async function getChampionSelectChatInfo() {
     const teamChatInfo = await create('GET', '/lol-chat/v1/conversations');
 	console.log(teamChatInfo);
-    return teamChatInfo ? teamChatInfo.find(item => item.type === 'championSelect') : null;
+    return teamChatInfo ? teamChatInfo.find(item => item.type == 'championSelect') : null;
 }
   
 async function postMessageToChat(chatId, message) {
@@ -305,6 +305,7 @@ async function updateLobbyState(message) {
         const gametitle = await create("GET", "/lol-gameflow/v1/session");
 		const isRankedGame = gametitle.gameData.queue.isRanked;
 		const chatInfo = await getChampionSelectChatInfo();
+	    console.log(chatInfo);
 		const chat = await create('GET', `/lol-chat/v1/conversations/${chatInfo.id}/messages`);
 		const participants = await create("GET", "//riotclient/chat/v5/participants");
 		const lobby = participants.participants.filter(participant => participant.cid.includes('champ-select'));
