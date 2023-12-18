@@ -1,1 +1,363 @@
-const API_HEADERS={accept:"application/json","content-type":"application/json"};async function create(a,b,c){const d={method:a,headers:API_HEADERS,...(c?{body:JSON.stringify(c)}:void 0)};try{const a=await fetch(b,d);if(!a.ok)throw new Error(`HTTP error! status: ${a.status}`);return await a.json()}catch(c){return console.error(`Error in create function for ${a} ${b}: ${c}`),null}}const delay=a=>new Promise(b=>setTimeout(b,a));function romanToNumber(a){const b={I:1,V:5,X:10,L:50,C:100,D:500,M:1e3};let c=0,d=0;for(let e=a.length-1;0<=e;e--){const f=b[a[e]];c+=f<d?-f:f,d=f}return c}function sumArrayElements(a){return Array.isArray(a)?a.reduce((a,b)=>a+b,0):(console.error("Expected an array, received:",a),0)}async function queryMatch(a,b=0,c=19){try{const d=await create("GET",`/lol-match-history/v1/products/lol/${a}/matches?begIndex=${b}&endIndex=${c}`),e=d.games.games;return!!Array.isArray(e)&&extractMatchData(e)}catch(b){return console.error("Error querying match for puuid:",a,b),!1}}function extractMatchData(a){const b={gameMode:[],championId:[],killList:[],deathsList:[],assistsList:[],Minions:[],gold:[],winList:[],causedEarlySurrenderList:[],laneList:[],spell1Id:[],spell2Id:[],items:[],types:[]};return a.forEach(a=>{const c=a.participants[0];b.gameMode.push(a.queueId),b.championId.push(c.championId),b.killList.push(c.stats.kills),b.deathsList.push(c.stats.deaths),b.assistsList.push(c.stats.assists),b.Minions.push(c.stats.neutralMinionsKilled+c.stats.totalMinionsKilled),b.gold.push(c.stats.goldEarned),b.winList.push(c.stats.win?"true":"false"),b.causedEarlySurrenderList.push(c.stats.causedEarlySurrender),b.laneList.push(c.timeline.lane),b.spell1Id.push(c.spell1Id),b.spell2Id.push(c.spell2Id);const d=[];for(let b=0;7>b;b++){const a="item"+b,e=c.stats[a];d.push(e)}b.items.push(d),b.types.push(a.gameType)}),b}async function getMatchDataForPuuids(a){try{const b=a.map(a=>queryMatch(a,0,21));return await Promise.all(b)}catch(a){return console.error("Error fetching match data for multiple PUUIDs:",a),[]}}async function fetchRankedStats(a){try{return await create("GET",`/lol-ranked/v1/ranked-stats/${a}`)}catch(b){return console.error("Error fetching ranked stats for puuid:",a,b),null}}async function getRankedStatsForPuuids(a){try{const b=await Promise.all(a.map(fetchRankedStats));return b.map(extractSimplifiedStats)}catch(a){return console.error("Error fetching ranked stats for multiple PUUIDs:",a),[]}}function extractSimplifiedStats(a){if(!a||!a.queueMap)return"Unranked";const b=a.queueMap.RANKED_SOLO_5x5,c=a.queueMap.RANKED_FLEX_SR;return determineRank(b,c)}function determineRank(a,b){return isValidRank(a)?formatRank(a):isValidRank(b)?formatRank(b):"Unranked"}function isValidRank(a){return a&&a.tier&&a.division&&"NA"!==a.tier&&!a.isProvisional}function formatRank(a){return["IRON","BRONZE","SILVER","GOLD","PLATINUM","EMERALD","DIAMOND"].includes(a.tier)?`${a.tier[0]}${romanToNumber(a.division)}`:a.tier}fetchRankedStats,getRankedStatsForPuuids;async function getChampionSelectChatInfo(){try{const a=await create("GET","/lol-chat/v1/conversations");return a?a.find(a=>"championSelect"===a.type):null}catch(a){return console.error("Error fetching champion select chat info:",a),null}}async function postMessageToChat(a,b){try{await create("POST",`/lol-chat/v1/conversations/${a}/messages`,{body:b,type:"celebration"})}catch(b){console.error(`Error posting message to chat ${a}:`,b)}}async function getMessageFromChat(a){try{await create("GET",`/lol-chat/v1/conversations/${a}/messages`)}catch(b){console.error(`Error getting messages from chat ${a}:`,b)}}getChampionSelectChatInfo,postMessageToChat,getMessageFromChat;async function observeQueue(a){try{const b=initializeWebSocket();b.onopen=()=>subscribeToGameFlow(b),b.onmessage=a,b.onerror=a=>{console.error("WebSocket Error:",a)}}catch(a){console.error("Error observing game queue:",a)}}function initializeWebSocket(){const a=getWebSocketURI();return new WebSocket(a,"wamp")}function getWebSocketURI(){const a=document.querySelector("link[rel=\"riot:plugins:websocket\"]");if(!a)throw new Error("WebSocket link element not found");return a.href}function subscribeToGameFlow(a){"/lol-gameflow/v1/gameflow-phase".replaceAll("/","_");a.send(JSON.stringify([5,"OnJsonApiEvent_lol-gameflow_v1_gameflow-phase"]))}async function handleChampionSelect(){try{await delay(5e3);const a=await create("GET","/riotclient/region-locale"),b=a.webRegion,c=await getChampionSelectChatInfo();if(!c)return;const d=await create("GET","//riotclient/chat/v5/participants"),e=d.participants.filter(a=>a.cid.includes("champ-select")),f=e.map(a=>a.puuid),g=await getMatchDataForPuuids(f),h=await getRankedStatsForPuuids(f),i=e.map((a,b)=>formatPlayerData(a,h[b],g[b]));for(const a of i)await postMessageToChat(c.id,a);const j=e.map(a=>encodeURIComponent(`${a.game_name}#${a.game_tag}`)).join("%2C");await postMessageToChat(c.id,`https://www.op.gg/multisearch/${b}?summoners=${j}`)}catch(a){console.error("Error in Champion Select phase:",a)}}function formatPlayerData(a,b,c){const d=calculateWinRate(c.winList),e=mostCommonRole(c.laneList),f=calculateKDA(c.killList,c.assistsList,c.deathsList);return`${a.game_name} - ${b} - ${d} - ${e} - ${f}`}async function updateLobbyState(a){try{const b=JSON.parse(a.data);"ChampSelect"===b[2].data&&(await handleChampionSelect())}catch(a){console.error("Error updating lobby state:",a)}}function calculateWinRate(a){if(!a||0===a.length)return"N/A";const b=a.filter(a=>"true"===a).length,c=a.length;return`${Math.round((100*(b/c)))}%`}function mostCommonRole(a){if(!a)return"N/A";const b=a.reduce((a,b)=>(a[b]=(a[b]||0)+1,a),{});let c=0,d=[];for(const e in b)b[e]>c?(d=[e],c=b[e]):b[e]===c&&d.push(e);return d.join("/")}function calculateKDA(a,b,c){const d=sumArrayElements(a.map(a=>"string"==typeof a?a.split(",").map(Number):[a]).flat()),e=sumArrayElements(b.map(a=>"string"==typeof a?a.split(",").map(Number):[a]).flat()),f=sumArrayElements(c.map(a=>"string"==typeof a?a.split(",").map(Number):[a]).flat());let g=0===f?"PERFECT":((d+e)/f).toFixed(2);return`${g} KDA`}async function initializeApp(){try{await observeQueue(updateLobbyState)}catch(a){console.error("Error initializing application:",a)}}window.addEventListener("load",initializeApp);
+const delay = (t) => new Promise((r) => setTimeout(r, t));
+
+async function create(method, endpoint, action) {
+    const initialize = {
+        method: method,
+        headers: {
+            "accept": "application/json",
+            "content-type": "application/json",
+        },
+        ...action ? { body: JSON.stringify(action) } : undefined  
+    };
+
+    const request = await fetch(endpoint, initialize);
+    const response = await request.json();
+
+    return response;
+}
+
+async function queryMatch(puuid, begIndex, endIndex) {
+        if (typeof begIndex !== 'number' || isNaN(begIndex)) {
+            begIndex = 0;
+        }
+        if (typeof endIndex !== 'number' || isNaN(endIndex)) {
+            endIndex = 5;
+        }
+        const result = await fetch(
+            '/lol-match-history/v1/products/lol/' +
+            puuid.toString() +
+            '/matches?begIndex=' +
+            begIndex.toString() +
+            '&endIndex=' +
+            endIndex.toString()
+        ).then((res) => res.json());
+        const matchList = await result.games;
+        const gameMode = [];
+        const championIds = [];
+        const killList = [];
+        const deathsList = [];
+        const assistsList = [];
+        const Minions = [];
+        const gold = [];
+        const winList = [];
+        const causedEarlySurrenderList = [];
+        const laneList = [];
+        const spell1Id = [];
+        const spell2Id = [];
+        const items = [];
+        const types = [];
+        if (matchList === undefined) {
+            return false;
+        }
+        const MList = Object.values(matchList);
+        for (let item of MList[5]) {
+            gameMode.push(item.queueId);
+            championIds.push(item.participants[0].championId);
+            killList.push(item.participants[0].stats.kills);
+            deathsList.push(item.participants[0].stats.deaths);
+            assistsList.push(item.participants[0].stats.assists);
+            Minions.push(item.participants[0].stats.neutralMinionsKilled + item.participants[0].stats.totalMinionsKilled);
+            gold.push(item.participants[0].stats.goldEarned);
+            winList.push(item.participants[0].stats.win);
+            causedEarlySurrenderList.push(item.participants[0].stats.causedEarlySurrender);
+            laneList.push(item.participants[0].timeline.lane);
+            spell1Id.push(item.participants[0].spell1Id);
+            spell2Id.push(item.participants[0].spell2Id);
+            const tmp_items = [];
+            for (let i = 0; i < 7; i++) {
+                const itemKey = 'item' + i;
+                const itemValue = item.participants[0].stats[itemKey];
+                tmp_items.push(itemValue);
+            }
+            items.push(tmp_items);
+            types.push(item.gameType);
+        };
+        return {
+            gameMode: gameMode,
+            championId: championIds,
+            killList: killList,
+            deathsList: deathsList,
+            assistsList: assistsList,
+            Minions: Minions,
+            gold: gold,
+            winList: winList,
+            causedEarlySurrenderList: causedEarlySurrenderList,
+            laneList: laneList,
+            spell1Id: spell1Id,
+            spell2Id: spell2Id,
+            items: items,
+            types: types
+        };
+
+
+
+
+    }
+
+async function getMatchDataForPuuids(puuidArray) {
+    try {
+        const promises = puuidArray.map(puuid => queryMatch(puuid, 0, 21));
+        const matchDataArray = await Promise.all(promises);
+        return matchDataArray; 
+    } catch (error) {
+        console.error('Error:', error);
+        return []; 
+    }
+}
+
+async function fetchRankedStats(puuid) {
+    const url = `/lol-ranked/v1/ranked-stats/${puuid}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching ranked stats for puuid:', puuid, error);
+        return null;
+    }
+}
+
+async function getRankedStatsForPuuids(puuidArray) {
+    function romanToNumber(roman) {
+        const romanNumerals = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+        let number = 0;
+        let prevValue = 0;
+
+        for (let i = roman.length - 1; i >= 0; i--) {
+            const currentValue = romanNumerals[roman[i]];
+
+            if (currentValue < prevValue) {
+                number -= currentValue;
+            } else {
+                number += currentValue;
+            }
+
+            prevValue = currentValue;
+        }
+
+        return number;
+    }
+
+    try {
+        const promises = puuidArray.map(puuid => fetchRankedStats(puuid));
+        const rankedStatsArray = await Promise.all(promises);
+        console.log(rankedStatsArray);
+
+        const simplifiedStats = rankedStatsArray.map(stats => {
+            if (stats && stats.queueMap && stats.queueMap["RANKED_SOLO_5x5"]) {
+                const soloQueueStats = stats.queueMap["RANKED_SOLO_5x5"];
+				const fiveQueueStats = stats.queueMap["RANKED_FLEX_SR"];
+
+              
+				if (soloQueueStats.tier != "IRON" && soloQueueStats.tier != "BRONZE" && soloQueueStats.tier != "SILVER" && soloQueueStats.tier != "GOLD" && soloQueueStats.tier != "PLATINUM" && soloQueueStats.tier != "EMERALD" && soloQueueStats.tier != "DIAMOND" && soloQueueStats.tier != "NA" && soloQueueStats.tier != ""){
+					return `${soloQueueStats.tier[0]}`;
+				}
+        
+
+        if (soloQueueStats.isProvisional || soloQueueStats.tier == "NA" || !soloQueueStats.tier || !soloQueueStats.division) {
+					
+					if(fiveQueueStats.isProvisional || fiveQueueStats.tier == "NA" || !fiveQueueStats.tier || !fiveQueueStats.division){
+						return "Unranked";
+					}
+
+						
+						if (fiveQueueStats.tier != "IRON" && fiveQueueStats.tier != "BRONZE" && fiveQueueStats.tier != "SILVER" && fiveQueueStats.tier != "GOLD" && fiveQueueStats.tier != "PLATINUM" && fiveQueueStats.tier != "EMERALD" && fiveQueueStats.tier != "DIAMOND" && fiveQueueStats.tier != "NA" && fiveQueueStats.tier != "" ){
+					return `${fiveQueueStats.tier[0]}`;
+				}
+				else{
+					return `${fiveQueueStats.tier[0]}${romanToNumber(fiveQueueStats.division)}`;
+				}
+
+						
+
+                   
+                } 
+				
+				
+				
+				else {
+                    return `${soloQueueStats.tier[0]}${romanToNumber(soloQueueStats.division)}`;
+                }
+            }
+            return "Unranked";
+        });
+
+        return simplifiedStats;
+    } catch (error) {
+        console.error('Error:', error);
+        return [];
+    }
+}
+
+
+async function getChampionSelectChatInfo() {
+    const teamChatInfo = await create('GET', '/lol-chat/v1/conversations');
+    return teamChatInfo ? teamChatInfo.find(item => item.type === 'championSelect') : null;
+}
+  
+async function postMessageToChat(chatId, message) {
+    const action = {
+        body: message,
+        type: "celebration"
+    };
+    await create('POST', `/lol-chat/v1/conversations/${chatId}/messages`, action);
+}
+
+async function getMessageFromChat(chatId, message) {
+    const action = {
+        body: message,
+        type: "celebration"
+    };
+    await create('GET', `/lol-chat/v1/conversations/${chatId}/messages`, action);
+}
+
+async function observeQueue(callback) {
+    const uri = document.querySelector('link[rel="riot:plugins:websocket"]').href;
+    const ws = new WebSocket(uri, 'wamp');
+
+    const endpoint = "/lol-gameflow/v1/gameflow-phase".replaceAll("/", "_");
+
+    ws.onopen = () => ws.send(JSON.stringify([5, 'OnJsonApiEvent' + endpoint]));
+    ws.onmessage = callback;
+}
+
+function calculateWinRate(winString) {
+    if (!winString) return "N/A"; 
+
+    const winArray = winString.split(',');
+    if (winArray.length < 5) return "N/A"; 
+
+    const totalGames = winArray.length;
+    const winCount = winArray.filter(result => result === "true").length;
+
+    const winRate = Math.round((winCount / totalGames) * 100); 
+    return winRate + '%'; 
+}
+
+function mostCommonRole(rolesString) {
+    if (!rolesString) return "N/A";
+
+    const rolesArray = rolesString.split(',');
+    const roleCounts = {};
+
+    
+    rolesArray.forEach(role => {
+        if (role && role !== "NONE") {
+            role = role.toLowerCase();
+            roleCounts[role] = (roleCounts[role] || 0) + 1;
+        }
+    });
+
+    
+    let maxCount = 0;
+    for (const role in roleCounts) {
+        if (roleCounts[role] > maxCount) {
+            maxCount = roleCounts[role];
+        }
+    }
+
+    
+    const mostCommonRoles = [];
+    for (const role in roleCounts) {
+        if (roleCounts[role] === maxCount) {
+            mostCommonRoles.push(role.charAt(0).toUpperCase() + role.slice(1));
+        }
+    }
+
+    return mostCommonRoles.length ? mostCommonRoles.join('/') : "N/A";
+}
+
+function sumArrayElements(array) {
+    return array.reduce((sum, num) => sum + num, 0);
+}
+
+function calculateKDA(killsArray, assistsArray, deathsArray) {
+    return killsArray.map((kills, index) => {
+        const totalKills = sumArrayElements(kills.split(',').map(Number));
+        const totalAssists = sumArrayElements(assistsArray[index].split(',').map(Number));
+        const totalDeaths = sumArrayElements(deathsArray[index].split(',').map(Number));
+
+        let kda;
+        if (totalDeaths === 0) {
+            kda = 'PERFECT KDA'; 
+        } else {
+            kda = ((totalKills + totalAssists) / totalDeaths).toFixed(2);
+        }
+
+        return `${kda} KDA`;
+    });
+}
+
+async function updateLobbyState(message) { 
+    const data = JSON.parse(message.data);
+    const phase = data[2];
+
+    if (phase.data === "ChampSelect") {
+		
+        await delay(5000);
+		const clientstuff = await create("GET", "/riotclient/region-locale");
+		const region = clientstuff.webRegion;
+		const session = await create("GET", "/lol-champ-select/v1/session");
+        const gametitle = await create("GET", "/lol-gameflow/v1/session");
+		const isRankedGame = gametitle.gameData.queue.isRanked;
+		const chatInfo = await getChampionSelectChatInfo();
+		const chat = await create('GET', `/lol-chat/v1/conversations/${chatInfo.id}/messages`);
+		const participants = await create("GET", "//riotclient/chat/v5/participants");
+		const lobby = participants.participants.filter(participant => participant.cid.includes('champ-select'));
+		const names = lobby.map(player => `${player.game_name} #${player.game_tag}`);
+		const namesonly = lobby.map(player => `${player.game_name}`);
+		const puuids = lobby.map(player => `${player.puuid}`);
+		const matchData = await getMatchDataForPuuids(puuids);
+		const urlnames = names.map(name => encodeURIComponent(name.replace(/%20/g, '+') )).join('%2C');
+		const ranks = await getRankedStatsForPuuids(puuids);
+		const matchType = matchData.map(history => `${history.gameMode}`);
+		const wins = matchData.map(history => `${history.winList}`);
+		const roles = matchData.map(history => `${history.laneList}`);
+		const kills = matchData.map(history => `${history.killList}`);
+		const assists = matchData.map(history => `${history.deathsList}`);
+		const deaths = matchData.map(history => `${history.assistsList}`);
+
+
+const rankedWins = wins.map((winString, index) => {
+    if (!winString) return ""; 
+
+    const winArray = winString.split(',');
+    const matchTypeArray = matchType[index].split(',');
+    
+    return winArray
+        .filter((_, winIndex) => matchTypeArray[winIndex] === "420")
+        .join(',');
+});
+
+
+
+		const mostCommonRolesArray = roles.map(rolesString => mostCommonRole(rolesString));
+		const winRates = wins.map(winString => calculateWinRate(winString));
+		const kdaRatios = calculateKDA(kills, assists, deaths);
+			
+
+		
+		
+		const finalArray = names.map((name, index) => `${namesonly[index]} - ${ranks[index]} - ${winRates[index]} - ${mostCommonRolesArray[index]} - ${kdaRatios[index]}`);
+		
+		console.log(matchData);
+		
+        if (chatInfo) {
+            for (const summname of finalArray) {
+                const message = `${summname}`;
+                await postMessageToChat(chatInfo.id, message);
+            }
+			const message2 = `https://www.op.gg/multisearch/${region}?summoners=${urlnames}`;
+			
+			await postMessageToChat(chatInfo.id, message2);
+        }
+		
+			
+    }
+}
+
+window.addEventListener('load', () => {
+    observeQueue(updateLobbyState);
+});
