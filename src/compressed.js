@@ -300,7 +300,7 @@ async function updateLobbyState(message) {
 
     if (phase.data === "ChampSelect") {
 		
-        await delay(5000);
+        await delay(15000);
 		const clientstuff = await create("GET", "/riotclient/region-locale");
 		const region = clientstuff.webRegion;
 		const session = await create("GET", "/lol-champ-select/v1/session");
