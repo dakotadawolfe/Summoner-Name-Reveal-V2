@@ -31,6 +31,7 @@ async function queryMatch(puuid, begIndex, endIndex) {
             '&endIndex=' +
             endIndex.toString()
         ).then((res) => res.json());
+	console.log(result);
         const matchList = await result.games;
         const gameMode = [];
         const championIds = [];
@@ -318,7 +319,8 @@ async function updateLobbyState(message) {
 		const kills = matchData.map(history => `${history.killList}`);
 		const assists = matchData.map(history => `${history.deathsList}`);
 		const deaths = matchData.map(history => `${history.assistsList}`);
-
+		console.log(lobby);
+	    console.log(session);
 
 const rankedWins = wins.map((winString, index) => {
     if (!winString) return ""; 
