@@ -353,6 +353,7 @@ const rankedWins = wins.map((winString, index) => {
         if (chatInfo) {
             for (const summname of finalArray) {
                 const message = `${summname}`;
+		console.log(message);
                 await postMessageToChat(chatInfo.id, message);
             }
 			const message2 = `https://www.op.gg/multisearch/${region}?summoners=${urlnames}`;
