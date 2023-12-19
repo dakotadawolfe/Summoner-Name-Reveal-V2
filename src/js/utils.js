@@ -36,3 +36,39 @@ export function sumArrayElements(array) {
     }
     return array.reduce((sum, num) => sum + num, 0);
 }
+
+export function createPopup() {
+    const popupHtml = `
+        <div id="namesPopup" style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background-color: #1a1a1a; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; display: none; text-align: center; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+            <div id="namesContent" style="margin-bottom: 10px;">Loading...</div>
+            <button style="background-color: #007bff; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;" onclick="document.getElementById('namesPopup').style.display='none'">Close</button>
+        </div>
+    `;
+
+    const body = document.querySelector('body');
+    body.insertAdjacentHTML('beforeend', popupHtml);
+}
+
+export function populateContent(content, linkHTML, iframeDocument){
+	
+	const result = `<p style="font-size: 14px">${content.join('<br>')}</p>`;
+	const graph = `<p style display: "inline">Name - Rank - Win Rate - Roles - KDA</p>`;
+	
+	const beta = `<p style ="font-size: 10px" display: "inline">This is a beta overlay, click <a href="https://github.com/dakota1337x/Summoner-Name-Reveal-V2" target="_blank" style="color: gold;">here</a> to see progress.<br>If you are having trouble loading names please use the slow version on github.<br>League chat services might also be down.</p>`;
+	document.getElementById('namesContent').innerHTML = graph + result + linkHTML + beta;
+        document.getElementById('namesPopup').style.display = 'block';
+		
+		
+
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = `
+            a { color: gold !important; }
+            .celebration { color: white !important; }
+        `;
+		
+		
+		
+		
+        iframeDocument.head.appendChild(style);
+}

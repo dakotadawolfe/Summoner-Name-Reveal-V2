@@ -1,5 +1,5 @@
 // Importing other modules
-import { delay, sumArrayElements } from './utils.js';
+import { delay, sumArrayElements, createPopup, populateContent } from './utils.js';
 import { getRankedStatsForPuuids } from './rankedStats.js';
 import { getMatchDataForPuuids } from './matchData.js';
 import { getChampionSelectChatInfo, postMessageToChat } from './chatService.js';
@@ -8,7 +8,7 @@ import { create } from './api.js';
 // Handles the Champion Select phase in the game lobby
 async function handleChampionSelect() {
     try {
-        await delay(5000); // Delay for synchronization
+        await delay(8000); // Delay for synchronization
         const clientStuff = await create("GET", "/riotclient/region-locale");
         const region = clientStuff.webRegion;
         const chatInfo = await getChampionSelectChatInfo();
@@ -23,14 +23,24 @@ async function handleChampionSelect() {
         const ranks = await getRankedStatsForPuuids(puuids);
 
         const displayData = lobby.map((player, index) => formatPlayerData(player, ranks[index], matchData[index]));
+		const displayData2 = lobby.map((player, index) => formatPlayerData2(player, ranks[index], matchData[index]));
+		
+		const iframe = document.getElementById('embedded-messages-frame');
+		const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
         for (const data of displayData) {
             await postMessageToChat(chatInfo.id, data);
+			
         }
 
         const urlnames = lobby.map(player => encodeURIComponent(`${player.game_name}#${player.game_tag}`)).join('%2C');
+		const urlnames2 = lobby.map(player => encodeURIComponent(`${player.game_name}#${player.game_tag}`)).join(',');
         const opggLink = `https://www.op.gg/multisearch/${region}?summoners=${urlnames}`;
-        await postMessageToChat(chatInfo.id, opggLink);
+		const poroLink = `https://porofessor.gg/pregame/${region}/${urlnames2}`;
+		const linkHTML = `<p style ="font-size: 12px" display: "inline"><a href="${opggLink}" target="_blank" style="color: gold;">View on OP.GG</a><br><a href="${poroLink}" target="_blank" style="color: gold;">View on Porofessor.gg</a></p>`;
+		
+		createPopup();	
+		populateContent(displayData2, linkHTML, iframeDocument);
 
     } catch (error) {
         console.error('Error in Champion Select phase:', error);
@@ -44,6 +54,14 @@ function formatPlayerData(player, rank, matchData) {
     const kdaRatios = calculateKDA(matchData.killList, matchData.assistsList, matchData.deathsList);
 
     return `${player.game_name} - ${rank} - ${winRates} - ${mostCommonRoles} - ${kdaRatios}`;
+}
+
+function formatPlayerData2(player, rank, matchData) {
+    const winRates = calculateWinRate(matchData.winList);
+    const mostCommonRoles = mostCommonRole(matchData.laneList);
+    const kdaRatios = calculateKDA(matchData.killList, matchData.assistsList, matchData.deathsList);
+
+    return `${player.game_name} #${player.game_tag} - ${rank} - ${winRates} - ${mostCommonRoles} - ${kdaRatios}`;
 }
 
 // Updates the lobby state based on the current game phase
@@ -71,7 +89,7 @@ function calculateWinRate(winList) {
 
 // Determines the most common role from match data
 function mostCommonRole(rolesList) {
-    if (!rolesList) return "N/A";
+    if (!rolesList) return "N/A"; 
 	
 	
     const roleCounts = rolesList.reduce((acc, role) => {
@@ -88,7 +106,9 @@ function mostCommonRole(rolesList) {
             mostCommonRoles.push(role);
         }
     }
-
+	if (mostCommonRoles == "NA" || mostCommonRoles == "NONE" || mostCommonRoles == ""){
+		return "N/A";
+	}
     return mostCommonRoles.join('/');
 }
 
