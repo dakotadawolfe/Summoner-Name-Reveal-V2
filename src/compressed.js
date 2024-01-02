@@ -96,7 +96,7 @@ function sumArrayElements(array) {
 
 function createPopup() {
     const sidebarHtml = `
-        <div id="infoSidebar" style="position: fixed; top: 0; left: 0; width: 282px; height: 100%; background-color: #1e2328; padding: 20px; border-right: 1px solid #C8A660; box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2); color: white; display: none; overflow-y: auto; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+        <div id="infoSidebar" style="z-index: 9999; position: fixed; top: 0; left: 0; width: 282px; height: 100%; background-color: #1e2328; padding: 20px; border-right: 1px solid #C8A660; box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2); color: white; display: none; overflow-y: auto; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
             <div id="sidebarContent">Loading... <br> This may take a few seconds.</div>
         </div>
         <button id="toggleButton" style="position: fixed; top: 625px; left: 325px;
