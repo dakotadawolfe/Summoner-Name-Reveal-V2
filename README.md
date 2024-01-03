@@ -1,46 +1,22 @@
-Hello all, I was tired of having to use external programs to see summoner's names and quick stats during ranked gameplay and I just wanted to see it in chat like TeamInsightX used to do before the recent Riot ID changes. I took it upon myself to update and tweak some thing, it's not nearly as full featured as TeamInsightX but it gets the job done.
+Please use the config.json included to enable/disable the UI/Text popups. Just open it in notepad and change whichever option you like from true to false.
 
-Features:
+Screenshots of plugin(Theses may be old and not represent the current state of the UI):
 
--See hidden users names in champ select.
-
--See quick stats like Rank, Win Rate, Commonly Played Lane, and KDA over the past 20 ranked games.
-
--Open a link directly to op.gg to see extended stats.
-
-
-FYI:
-
--It will show N/A or say Unranked if there is not enough recent data to pull from, please refer to the link in chat to see more detailed information about a champ.
-
-Bugs:
-
--IDK comment here!
-
-Screenshots:
-
-https://i.imgur.com/I9PUf3v.png
-
-https://i.imgur.com/MhEepbe.png
-
-https://i.imgur.com/6iMSkL1.png
-
-https://i.imgur.com/fSdROXX.png
+-https://i.imgur.com/LFeVruz.png
+-https://i.imgur.com/6JwsVrY.png
 
 Install Instructions:
 
-Click the download link above and select the download icon in the top left hand corner.
+-Download the newest version of the PenguLoader here https://github.com/PenguLoader/PenguLoader/releases.
 
-After downloading please open the Pengu loader and select the "Plugins" tab.
+-Download the newest release of Summoner NAme Reveal V2 here https://github.com/dakota1337x/Summoner-Name-Reveal-V2/releases.
 
-After that select the "Open folder" button at the bottom of the program.
+-After downloading please open the Pengu loader and select the "Plugins" tab.
 
-Drag and drop the downloaded "Summoner Name Reveal V2.js" into that folder.
+-After that select the "Open folder" button at the bottom of the program.
 
-Thats all! Below is a short GIF on installation.
+-Drag and drop the downloaded "Summoner Name Reveal" folder inside the "plugins" folder.
 
+Thats all! Below is a short video on installation.
 
-https://i.imgur.com/K0xHEiS.gif
-
-
-Thanks! Would love feedback if you have any issues.
+https://streamable.com/6zhitf
