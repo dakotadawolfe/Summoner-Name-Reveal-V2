@@ -179,6 +179,7 @@ async function queryMatch(puuid, begIndex = 0, endIndex = 19) {
         const endpoint = `/lol-match-history/v1/products/lol/${puuid}/matches?begIndex=${begIndex}&endIndex=${endIndex}`;
         const result = await create('GET', endpoint);
         const matchList = result.games.games; // Update this line
+	    console.log(matchList);
         return Array.isArray(matchList) ? extractMatchData(matchList) : false;
     } catch (error) {
         console.error('Error querying match for puuid:', puuid, error);
