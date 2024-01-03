@@ -3,6 +3,7 @@ Please use the config.json included to enable/disable the UI/Text popups. Just o
 Screenshots of plugin(Theses may be old and not represent the current state of the UI):
 
 -https://i.imgur.com/LFeVruz.png
+
 -https://i.imgur.com/6JwsVrY.png
 
 Install Instructions:
