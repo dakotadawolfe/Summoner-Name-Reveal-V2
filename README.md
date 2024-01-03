@@ -10,7 +10,7 @@ Install Instructions:
 
 -Download the newest version of the PenguLoader here https://github.com/PenguLoader/PenguLoader/releases.
 
--Download the newest release of Summoner NAme Reveal V2 here https://github.com/dakota1337x/Summoner-Name-Reveal-V2/releases.
+-Download the newest release of Summoner Name Reveal V2 here https://github.com/dakota1337x/Summoner-Name-Reveal-V2/releases.
 
 -After downloading please open the Pengu loader and select the "Plugins" tab.
 
