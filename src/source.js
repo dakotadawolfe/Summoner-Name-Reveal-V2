@@ -97,40 +97,7 @@ function sumArrayElements(array) {
 }
 
 function createPopup() {
-    const sidebarHtml = `
-        <div id="infoSidebar" style="z-index: 9999; position: fixed; top: 0; left: 0; width: 282px; height: 100%; background-color: #1e2328; padding: 20px; border-right: 1px solid #C8A660; box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2); color: white; display: none; overflow-y: auto; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-            <div id="sidebarContent">Loading... <br> This may take a few seconds.</div>
-        </div>
-        <button id="toggleButton" style="position: fixed; top: 625px; left: 325px;
-	color: #cdbe91;
-    font-size: var(--font-size, 14px);
-    font-family: var(--font-family, var(--font-display));
-    font-weight: bold;
-    letter-spacing: 1px;
-    align-items: center;
-    box-sizing: border-box;
-    justify-content: center;
-    white-space: nowrap;
-    padding: 5px 1.3em;
-    height: var(--flat-button-height);
-    width: var(--flat-button-width);
-    min-height: var(--flat-button-min-height);
-    cursor: pointer;
-    -webkit-user-select: none;
-    box-shadow: 0 0 1px 1px #010a13, inset 0 0 1px 1px #010a13;
-    background: #1e2328;
-    background-image: initial;
-    background-position-x: initial;
-    background-position-y: initial;
-    background-size: initial;
-    background-repeat-x: initial;
-    background-repeat-y: initial;
-    background-attachment: initial;
-    background-origin: initial;
-    background-clip: initial;
-    background-color: rgb(30, 35, 40);
-    border: 1px solid #C8A660;">Summoner Name Reveal V2</button>
-    `;
+    const sidebarHtml = `<div id="infoSidebar" style="z-index: 9999; position: fixed; top: 0; left: 0; width: 282px; height: 100%; background-color: #1e2328; padding: 20px; border-right: 1px solid #C8A660; box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2); color: white; display: none; overflow-y: auto; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;"><div id="sidebarContent">Loading... <br> This may take a few seconds.</div></div><button id="toggleButton" style="position: fixed; top: 625px; left: 325px;color: #cdbe91;font-size: var(--font-size, 14px);font-family: var(--font-family, var(--font-display));font-weight: bold;letter-spacing: 1px;align-items: center;box-sizing: border-box;justify-content: center;white-space: nowrap;padding: 5px 1.3em;height: var(--flat-button-height);width: var(--flat-button-width);min-height: var(--flat-button-min-height);cursor: pointer;-webkit-user-select: none;box-shadow: 0 0 1px 1px #010a13, inset 0 0 1px 1px #010a13;background: #1e2328;background-image: initial;background-position-x: initial;background-position-y: initial;background-size: initial;background-repeat-x: initial;background-repeat-y: initial;background-attachment: initial;background-origin: initial;background-clip: initial;background-color: rgb(30, 35, 40);border: 1px solid #C8A660;">Summoner Name Reveal V2</button>`;
 
     document.body.insertAdjacentHTML('beforeend', sidebarHtml);
 
