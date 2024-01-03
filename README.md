@@ -23,6 +23,10 @@ https://i.imgur.com/I9PUf3v.png
 
 https://i.imgur.com/MhEepbe.png
 
+https://i.imgur.com/6iMSkL1.png
+
+https://i.imgur.com/fSdROXX.png
+
 Install Instructions:
 
 Click the download link above and select the download icon in the top left hand corner.
