@@ -89,3 +89,7 @@ GameName #TAG - Rank - WinRate - CommonRole - KDA
 ## Notes
 
 This plugin uses local League Client APIs and DOM surfaces exposed inside the client. League Client updates can change endpoint behavior or page structure, so occasional maintenance may be required.
+
+## License
+
+GPL-3.0. See `LICENSE`.
